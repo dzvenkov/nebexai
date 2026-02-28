@@ -53,3 +53,22 @@ class GitHubClient:
                 content = response.text
                 
         return content
+
+    async def get_repository_context(self, owner: str, repo: str) -> str:
+        """Fetch and aggregate filtered repository contents for LLM context."""
+        tree = await self.get_repository_tree(owner, repo)
+        filtered_paths = self.filter_paths(tree)
+        
+        # Build structure view
+        structure = "Repository Structure:\n"
+        for path in filtered_paths:
+            structure += f"- {path}\n"
+        
+        # Fetch file contents
+        contents = "\nFile Contents:\n"
+        for path in filtered_paths:
+            content = await self.get_file_content(owner, repo, path)
+            contents += f"\n--- FILE: {path} ---\n{content}\n"
+            
+        return f"{structure}\n{contents}"
+
