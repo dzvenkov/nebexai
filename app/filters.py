@@ -61,12 +61,38 @@ class SizeLimiterFileFilterStrategy:
             lower_path = path.lower()
             name = lower_path.split("/")[-1]
             
-            # Priority criteria: README, *.md, *.txt, *doc*
+            # Expanded priority criteria to capture max documentation and core architecture info
             is_priority = (
-                "readme" in name or 
+                # Standard markdown/text docs
                 name.endswith(".md") or 
                 name.endswith(".txt") or 
-                "doc" in lower_path
+                name.endswith(".rst") or
+                name.endswith(".wiki") or
+                
+                # Standard GitHub/Community files (with or without extensions)
+                name.startswith("readme") or
+                name.startswith("contributing") or
+                name.startswith("changelog") or
+                name.startswith("license") or
+                name.startswith("security") or
+                name.startswith("code_of_conduct") or
+                name.startswith("authors") or
+                name.startswith("support") or
+                
+                # Common config and architecture files that give immense context
+                name in [
+                    "package.json", "pyproject.toml", "requirements.txt",
+                    "cargo.toml", "pom.xml", "build.gradle", "gemfile",
+                    "dockerfile", "docker-compose.yml", "makefile"
+                ] or
+                
+                # Dedicated documentation directories
+                "doc" in lower_path or
+                "docs" in lower_path or
+                ".github" in lower_path or
+                "architecture" in lower_path or
+                "spec" in lower_path or
+                "api" in lower_path
             )
             
             if is_priority:
