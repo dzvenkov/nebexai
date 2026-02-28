@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 from typing import List, Dict, Any, Optional
 from app.filters import FileFilterStrategy, DefaultFileFilterStrategy
@@ -73,7 +74,7 @@ class GitHubClient:
         
         return response.text
 
-    async def get_repository_context(self, owner: str, repo: str) -> str:
+    async def get_repository_context(self, owner: str, repo: str, max_concurrency: int = 10) -> str:
         """Fetch and aggregate filtered repository contents for LLM context."""
         tree = await self.get_repository_tree(owner, repo)
         filtered_paths = self.filter_paths(tree)
@@ -87,10 +88,17 @@ class GitHubClient:
             structure += f"  <path>{path}</path>\n"
         structure += "</repository_structure>\n"
         
-        # Fetch file contents
+        # Fetch file contents in parallel with concurrency limit
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def _fetch(path: str) -> str:
+            async with semaphore:
+                return await self.get_file_content(owner, repo, path)
+
+        file_contents = await asyncio.gather(*[_fetch(p) for p in filtered_paths])
+        
         contents = "<repository_contents>\n"
-        for path in filtered_paths:
-            content = await self.get_file_content(owner, repo, path)
+        for path, content in zip(filtered_paths, file_contents):
             contents += f'  <file path="{path}">\n{content}\n  </file>\n'
         contents += "</repository_contents>\n"
             
