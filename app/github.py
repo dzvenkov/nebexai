@@ -1,9 +1,10 @@
 import httpx
 import os
 from typing import List, Dict, Any, Optional
+from app.filters import FileFilterStrategy, DefaultFileFilterStrategy
 
 class GitHubClient:
-    def __init__(self, token: Optional[str] = None):
+    def __init__(self, token: Optional[str] = None, file_filter: Optional[FileFilterStrategy] = None):
         self.base_url = "https://api.github.com"
         self.headers = {
             "Accept": "application/vnd.github.v3+json",
@@ -11,6 +12,7 @@ class GitHubClient:
         }
         if token:
             self.headers["Authorization"] = f"token {token}"
+        self.file_filter = file_filter or DefaultFileFilterStrategy()
 
     async def get_repository_tree(self, owner: str, repo: str) -> List[Dict[str, Any]]:
         """Fetch the recursive file tree for the repository."""
@@ -26,39 +28,13 @@ class GitHubClient:
             if response.status_code != 200:
                 raise Exception(f"Failed to fetch repository tree: {response.text}")
             
-            return response.json().get("tree", [])
+            tree_data = response.json()
+            
+        return tree_data.get("tree", [])
 
     def filter_paths(self, tree: List[Dict[str, Any]]) -> List[str]:
         """Filter paths to include only relevant code and metadata files."""
-        ignored_patterns = {
-            '.git/', 'node_modules/', 'venv/', '.venv/', '__pycache__/', 
-            'dist/', 'build/', '.idea/', '.vscode/', '.DS_Store'
-        }
-        ignored_extensions = {
-            '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.mp4', '.zip', 
-            '.ico', '.lock', '.svg', '.bin', '.exe', '.dll', '.so'
-        }
-        
-        relevant_paths = []
-        for item in tree:
-            path = item.get("path", "")
-            if item.get("type") != "blob": continue
-            
-            # Check ignored prefixes
-            if any(path.startswith(pattern) for pattern in ignored_patterns):
-                continue
-            
-            # Check ignored middle segments
-            if any(f"/{pattern}" in f"/{path}" for pattern in ignored_patterns):
-                continue
-            
-            # Check extensions
-            if any(path.lower().endswith(ext) for ext in ignored_extensions):
-                continue
-                
-            relevant_paths.append(path)
-            
-        return relevant_paths
+        return self.file_filter.filter_paths(tree)
 
     async def get_file_content(self, owner: str, repo: str, path: str) -> str:
         """Fetch raw content of a specific file."""
@@ -72,6 +48,8 @@ class GitHubClient:
                 response = await client.get(url)
             
             if response.status_code != 200:
-                return f"[Error fetching {path}]"
-            
-            return response.text
+                content = f"[Error fetching {path}]"
+            else:
+                content = response.text
+                
+        return content

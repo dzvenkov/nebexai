@@ -11,7 +11,7 @@
   - [/] Implement GitHub repository cloning/fetching functionality
 
 
-  - [ ] Implement smart file filtering (ignoring binary files, `node_modules`, lockfiles)
+  - [x] Implement smart file filtering (ignoring binary files, `node_modules`, lockfiles)
   - [ ] Implement context generation (directory tree + relevant code)
   - [ ] Implement LLM integration (via `NEBIUS_API_KEY` or custom LLM provider)
   - [ ] Create `POST /summarize` endpoint with appropriate validation and error handling
