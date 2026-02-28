@@ -1,5 +1,4 @@
 import httpx
-import os
 from typing import List, Dict, Any, Optional
 from app.filters import FileFilterStrategy, DefaultFileFilterStrategy
 
