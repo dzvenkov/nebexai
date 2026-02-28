@@ -60,9 +60,9 @@ try {
     $kbCount = [math]::Round($byteCount / 1KB, 2)
 
     Write-Host "=== Response ===" -ForegroundColor Green
-    Write-Host "Size: $byteCount bytes ($kbCount KB)" -ForegroundColor Cyan
-    Write-Host "-------------------"
     Write-Host $response
+    Write-Host "-------------------"
+    Write-Host "Total Size: $byteCount bytes ($kbCount KB)" -ForegroundColor Cyan
 }
 catch {
     Write-Host "ERROR: Request failed." -ForegroundColor Red
