@@ -135,6 +135,21 @@ class SizeLimiterFileFilterStrategy:
 
         return final_items
 
+class IndividualFileSizeFilterStrategy:
+    """
+    Omits any individual file that is larger than the specified limit.
+    Useful to avoid spending an entire context budget on a single massive file.
+    """
+    def __init__(self, max_file_size_bytes: int = 50_000):
+        # Default ~50KB per file
+        self.max_file_size_bytes = max_file_size_bytes
+
+    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        return [
+            item for item in tree 
+            if item.get("size", 0) <= self.max_file_size_bytes
+        ]
+
 class CompositeFileFilterStrategy:
     """
     Applies a list of filter strategies sequentially.
@@ -153,10 +168,14 @@ class CompositeFileFilterStrategy:
 
 class DefaultFileFilterStrategy(CompositeFileFilterStrategy):
     """
-    The default filter: strips unwanted files/folders and applies a size limit.
+    The default filter composite: 
+    1. Strips unwanted files/folders (.git, node_modules, binaries, etc)
+    2. Drops single files that are too large (>50KB)
+    3. Applies an overall size limit (~90KB), prioritizing docs and sampling folders.
     """
     def __init__(self):
         super().__init__([
             BaseFileFilterStrategy(),
+            IndividualFileSizeFilterStrategy(max_file_size_bytes=50_000),
             SizeLimiterFileFilterStrategy(max_size_bytes=90_000)
         ])
