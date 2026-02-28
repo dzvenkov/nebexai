@@ -59,16 +59,21 @@ class GitHubClient:
         tree = await self.get_repository_tree(owner, repo)
         filtered_paths = self.filter_paths(tree)
         
+        # Sort paths so files closer to root (shorter paths) come first
+        filtered_paths.sort(key=lambda p: (p.count('/'), len(p), p))
+        
         # Build structure view
-        structure = "Repository Structure:\n"
+        structure = "<repository_structure>\n"
         for path in filtered_paths:
-            structure += f"- {path}\n"
+            structure += f"  <path>{path}</path>\n"
+        structure += "</repository_structure>\n"
         
         # Fetch file contents
-        contents = "\nFile Contents:\n"
+        contents = "<repository_contents>\n"
         for path in filtered_paths:
             content = await self.get_file_content(owner, repo, path)
-            contents += f"\n--- FILE: {path} ---\n{content}\n"
+            contents += f'  <file path="{path}">\n{content}\n  </file>\n'
+        contents += "</repository_contents>\n"
             
         return f"{structure}\n{contents}"
 
