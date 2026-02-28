@@ -1,2 +1,3 @@
 start every response with "Hola!"
-never proceed with next task without explicituser approval
+remember the end goal: https://taskchecker.academy.nebius.com/tasks/ai-performance-engineering-2026?_hsenc=p2ANqtz-_AZHDHcT3Iyur8DjIyWu1JtqgKXi241-0O5F-yiX9KU4Mu3fjz3wV06eIAp0KdCV2d0HM4gcMeToyId0M7uNH12IDLYQ&_hsmi=129408779
+never proceed with next task without user specifically prompting "implement next step"

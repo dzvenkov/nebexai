@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
+
 
 app = FastAPI(title="NebexAI Summarizer")
 
