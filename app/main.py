@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, field_validator
 from app.github import GitHubClient
 from app.llm import LLMClient, SummaryResponse
@@ -7,6 +8,24 @@ import re
 
 
 app = FastAPI(title="NebexAI Summarizer")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Formats payload validation errors into a clean, unified structure."""
+    errs = exc.errors()
+    msg = errs[0]["msg"].replace("Value error, ", "") if errs else str(exc)
+    return JSONResponse(
+        status_code=422,
+        content={"status": "error", "message": msg},
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Formats standard HTTP exceptions into the unified structure."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"status": "error", "message": str(exc.detail)},
+    )
 
 GITHUB_URL_PATTERN = re.compile(
     r"^https://github\.com/[a-zA-Z0-9\-_.]+/[a-zA-Z0-9\-_.]+/?$"
