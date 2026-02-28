@@ -11,6 +11,7 @@
   - [x] Implement GitHub repository cloning/fetching functionality
   - [x] Implement smart file filtering (ignoring binary files, `node_modules`, lockfiles)
   - [x] Implement context generation (directory tree + relevant code)
+  - [x] Create `POST /buildcontext` debug endpoint to inspect raw LLM context
   - [ ] Implement LLM integration (via `NEBIUS_API_KEY` or custom LLM provider)
   - [ ] Create `POST /summarize` endpoint with appropriate validation and error handling
 - [ ] Documentation & Verification

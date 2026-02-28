@@ -28,7 +28,13 @@ This execution plan outlines the steps and architecture required to build the re
   - `structure`: A markdown string describing layout.
 - Use Structured Outputs or JSON mode if available, or ask it to respond with JSON block and parse it.
 
-### 4. API Endpoint (`POST /summarize`)
+### 4. API Endpoints
+
+#### `POST /buildcontext` (Debug)
+- Accepts `{"github_url": "..."}` and returns the raw XML-tagged repository context as plain text.
+- Useful for inspecting and iterating on the context payload before sending it to the LLM.
+
+#### `POST /summarize`
 - Fast validation using Pydantic model for request: `{"github_url": "..."}`
 - Asynchronous execution flow: 
   1. Parse URL to get owner and repo name.
