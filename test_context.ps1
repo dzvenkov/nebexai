@@ -30,7 +30,8 @@ for ($i = 0; $i -lt $maxRetries; $i++) {
         $null = Invoke-WebRequest -Uri "$BaseUrl/docs" -UseBasicParsing -ErrorAction Stop
         $ready = $true
         break
-    } catch {
+    }
+    catch {
         # Server not ready yet
     }
 }
@@ -54,12 +55,20 @@ try {
         -ContentType "application/json" `
         -Body "{`"github_url`": `"$RepoUrl`"}"
 
+    # Calculate size in bytes
+    $byteCount = [System.Text.Encoding]::UTF8.GetByteCount($response)
+    $kbCount = [math]::Round($byteCount / 1KB, 2)
+
     Write-Host "=== Response ===" -ForegroundColor Green
+    Write-Host "Size: $byteCount bytes ($kbCount KB)" -ForegroundColor Cyan
+    Write-Host "-------------------"
     Write-Host $response
-} catch {
+}
+catch {
     Write-Host "ERROR: Request failed." -ForegroundColor Red
     Write-Host $_.Exception.Message
-} finally {
+}
+finally {
     # Stop the server
     Write-Host ""
     Write-Host "Stopping server..." -ForegroundColor Yellow
