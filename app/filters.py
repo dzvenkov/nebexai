@@ -20,11 +20,7 @@ class DefaultFileFilterStrategy:
             path = item.get("path", "")
             if item.get("type") != "blob": continue
             
-            # Check ignored prefixes
-            if any(path.startswith(pattern) for pattern in ignored_patterns):
-                continue
-            
-            # Check ignored middle segments
+            # Check ignored directory segments
             if any(f"/{pattern}" in f"/{path}" for pattern in ignored_patterns):
                 continue
             
