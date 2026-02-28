@@ -59,7 +59,7 @@ class GitHubClient:
         tree_data = response.json()
         return tree_data.get("tree", [])
 
-    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[str]:
+    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter paths to include only relevant code and metadata files."""
         return self.file_filter.filter_paths(tree)
 
@@ -77,9 +77,10 @@ class GitHubClient:
     async def get_repository_context(self, owner: str, repo: str, max_concurrency: int = 10) -> str:
         """Fetch and aggregate filtered repository contents for LLM context."""
         tree = await self.get_repository_tree(owner, repo)
-        filtered_paths = self.filter_paths(tree)
+        filtered_items = self.filter_paths(tree)
         
-        # Sort paths so files closer to root (shorter paths) come first
+        # Extract paths and sort so files closer to root (shorter paths) come first
+        filtered_paths = [item["path"] for item in filtered_items if "path" in item]
         filtered_paths.sort(key=lambda p: (p.count('/'), len(p), p))
         
         # Build structure view

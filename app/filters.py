@@ -1,11 +1,11 @@
 from typing import List, Dict, Any, Protocol
 
 class FileFilterStrategy(Protocol):
-    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[str]:
+    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         ...
 
 class DefaultFileFilterStrategy:
-    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[str]:
+    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         ignored_patterns = {
             '.git/', 'node_modules/', 'venv/', '.venv/', '__pycache__/', 
             'dist/', 'build/', '.idea/', '.vscode/', '.DS_Store'
@@ -15,7 +15,7 @@ class DefaultFileFilterStrategy:
             '.ico', '.lock', '.svg', '.bin', '.exe', '.dll', '.so'
         }
         
-        relevant_paths = []
+        relevant_items = []
         for item in tree:
             path = item.get("path", "")
             if item.get("type") != "blob": continue
@@ -28,6 +28,6 @@ class DefaultFileFilterStrategy:
             if any(path.lower().endswith(ext) for ext in ignored_extensions):
                 continue
                 
-            relevant_paths.append(path)
+            relevant_items.append(item)
             
-        return relevant_paths
+        return relevant_items
