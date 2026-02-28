@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, field_validator
 from app.github import GitHubClient
+from app.llm import LLMClient, SummaryResponse
 import re
 
 
@@ -39,20 +40,32 @@ async def build_context(request: SummarizeRequest):
         async with GitHubClient() as gh:
             context = await gh.get_repository_context(owner, repo)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"GitHub error: {str(e)}")
     
     return PlainTextResponse(content=context)
 
-@app.post("/summarize")
+@app.post("/summarize", response_model=SummaryResponse)
 async def summarize(request: SummarizeRequest):
     """
-    Dummy endpoint that echoes the request body.
+    Fetches the GitHub repository context and summarizes it using an LLM.
     """
-    return {
-        "status": "echo",
-        "received": request.github_url,
-        "note": "This is a dummy endpoint for verification."
-    }
+    owner, repo = _parse_github_url(request.github_url)
+    
+    try:
+        # Step 1: Fetch and filter repository context
+        async with GitHubClient() as gh:
+            context = await gh.get_repository_context(owner, repo)
+            
+        # Step 2: Generate summary using the LLM client
+        llm = LLMClient()
+        summary_response = await llm.generate_summary(context)
+        
+        return summary_response
+        
+    except Exception as e:
+        # Log error in console and return 500
+        print(f"Error summarising repo {owner}/{repo}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
