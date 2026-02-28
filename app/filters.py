@@ -69,7 +69,7 @@ class SizeLimiterFileFilterStrategy:
                 name.endswith(".rst") or
                 name.endswith(".wiki") or
                 
-                # Standard GitHub/Community files (with or without extensions)
+                # Standard GitHub/Community files
                 name.startswith("readme") or
                 name.startswith("contributing") or
                 name.startswith("changelog") or
@@ -79,17 +79,35 @@ class SizeLimiterFileFilterStrategy:
                 name.startswith("authors") or
                 name.startswith("support") or
                 
-                # Common config and architecture files that give immense context
+                # Common config and architecture files
                 name in [
                     "package.json", "pyproject.toml", "requirements.txt",
                     "cargo.toml", "pom.xml", "build.gradle", "gemfile",
-                    "dockerfile", "docker-compose.yml", "makefile"
+                    "dockerfile", "docker-compose.yml", "makefile",
+                    "jenkinsfile", "vagrantfile", "procfile", "serverless.yml",
+                    "appspec.yml", "pulumi.yaml"
                 ] or
                 
-                # Dedicated documentation directories
+                # Setup / CI / CD config files
+                name.startswith(".gitlab-ci") or
+                name.startswith(".travis") or
+                name.startswith("azure-pipelines") or
+                name.startswith("sonar-project") or
+
+                # Deployment, Infrastructure, and Runbook patterns
+                "runbook" in lower_path or
+                "playbook" in lower_path or
+                "k8s" in lower_path or
+                "kubernetes" in lower_path or
+                "helm" in lower_path or
+                "terraform" in lower_path or
+                name.endswith(".tf") or
+                
+                # Dedicated documentation/architecture directories
                 "doc" in lower_path or
                 "docs" in lower_path or
                 ".github" in lower_path or
+                ".circleci" in lower_path or
                 "architecture" in lower_path or
                 "spec" in lower_path or
                 "api" in lower_path
