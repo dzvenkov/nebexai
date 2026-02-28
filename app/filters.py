@@ -4,7 +4,7 @@ class FileFilterStrategy(Protocol):
     def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         ...
 
-class DefaultFileFilterStrategy:
+class BaseFileFilterStrategy:
     def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         ignored_patterns = {
             '.git/', 'node_modules/', 'venv/', '.venv/', '__pycache__/', 
@@ -34,7 +34,7 @@ class DefaultFileFilterStrategy:
 
 class SizeLimiterFileFilterStrategy:
     """
-    Takes an existing filter's output and applies a size limit threshold.
+    Applies a size limit threshold to a given list of files.
     
     Logic:
     1. Prioritize critical files (e.g. readmes, .md files, *doc* files).
@@ -42,25 +42,21 @@ class SizeLimiterFileFilterStrategy:
     2. For the remaining files, take one from each folder starting from root
        layer by layer until the total expected filesize reaches the limit.
     3. If a file puts the total over the limit, it's included but marked for 
-       truncation (by modifying its size value or letting the caller handle it).
-       For now, we just include files up to the limit and stop.
+       truncation.
     """
-    def __init__(self, base_filter: FileFilterStrategy, max_size_bytes: int = 100_000):
+    def __init__(self, max_size_bytes: int = 100_000):
         # 100,000 bytes is roughly 100KB, which is ~25k-30k tokens for typical code.
-        self.base_filter = base_filter
         self.max_size_bytes = max_size_bytes
 
     def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        # 1. Get pre-filtered items from the base filter.
-        items = self.base_filter.filter_paths(tree)
-        if not items:
+        if not tree:
             return []
 
-        # 2. Separate into priority and remaining
+        # 1. Separate into priority and remaining
         priority_items = []
         remaining_items = []
         
-        for item in items:
+        for item in tree:
             path = item.get("path", "")
             lower_path = path.lower()
             name = lower_path.split("/")[-1]
@@ -81,7 +77,7 @@ class SizeLimiterFileFilterStrategy:
         # Sort priority items by depth (slashes) then name
         priority_items.sort(key=lambda x: (x.get("path", "").count("/"), x.get("path", "")))
 
-        # 3. Group remaining items by folder depth and directory
+        # 2. Group remaining items by folder depth and directory
         from collections import defaultdict
         
         # dir_map: dict of dir_path -> list of items
@@ -95,7 +91,7 @@ class SizeLimiterFileFilterStrategy:
         for d in dir_map:
             dir_map[d].sort(key=lambda x: x.get("path", ""))
 
-        # 4. Construct final list keeping track of sizes
+        # 3. Construct final list keeping track of sizes
         final_items = []
         current_size = 0
 
@@ -138,3 +134,29 @@ class SizeLimiterFileFilterStrategy:
                         return final_items
 
         return final_items
+
+class CompositeFileFilterStrategy:
+    """
+    Applies a list of filter strategies sequentially.
+    The output of one strategy becomes the input to the next.
+    """
+    def __init__(self, strategies: List[FileFilterStrategy]):
+        self.strategies = strategies
+
+    def filter_paths(self, tree: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        current_tree = tree
+        for strategy in self.strategies:
+            current_tree = strategy.filter_paths(current_tree)
+            if not current_tree:
+                break
+        return current_tree
+
+class DefaultFileFilterStrategy(CompositeFileFilterStrategy):
+    """
+    The default filter: strips unwanted files/folders and applies a size limit.
+    """
+    def __init__(self):
+        super().__init__([
+            BaseFileFilterStrategy(),
+            SizeLimiterFileFilterStrategy(max_size_bytes=90_000)
+        ])

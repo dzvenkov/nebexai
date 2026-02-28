@@ -1,7 +1,7 @@
 import asyncio
 import httpx
 from typing import List, Dict, Any, Optional
-from app.filters import FileFilterStrategy, DefaultFileFilterStrategy, SizeLimiterFileFilterStrategy
+from app.filters import FileFilterStrategy, DefaultFileFilterStrategy
 
 class GitHubClient:
     BRANCH_CANDIDATES = ["main", "master"]
@@ -15,12 +15,7 @@ class GitHubClient:
         if token:
             self.headers["Authorization"] = f"token {token}"
             
-        if file_filter:
-            self.file_filter = file_filter
-        else:
-            base_filter = DefaultFileFilterStrategy()
-            # Default to slightly below 100k bytes (~25k tokens), giving room for prompt overhead
-            self.file_filter = SizeLimiterFileFilterStrategy(base_filter, max_size_bytes=90_000)
+        self.file_filter = file_filter or DefaultFileFilterStrategy()
         self._default_branch: Optional[str] = None
         self._client: Optional[httpx.AsyncClient] = None
 
