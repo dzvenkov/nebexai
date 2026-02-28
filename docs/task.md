@@ -14,6 +14,6 @@
   - [x] Create `POST /buildcontext` debug endpoint to inspect raw LLM context
   - [x] Implement LLM integration (via `NEBIUS_API_KEY` or custom LLM provider)
   - [x] Create `POST /summarize` endpoint with appropriate validation and error handling
-- [ ] Documentation & Verification
-  - [ ] Write `README.md` (setup instructions, model choice rationale, filtering strategy)
+- [/] Documentation & Verification
+  - [x] Write `README.md` (setup instructions, model choice rationale, filtering strategy)
   - [ ] Test API with valid and invalid repositories
